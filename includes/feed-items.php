@@ -159,7 +159,7 @@ class PF_Feed_Item {
 			ORDER BY {$wpdb->postmeta}.meta_value DESC
 		 ", pf_feed_item_post_type());
 		} elseif ($limit == 'starred') {
-			
+
 			$relate = pressforward()->relationships;
 			$rt = $relate->table_name;
 			$user_id = get_current_user_id();
@@ -186,7 +186,7 @@ class PF_Feed_Item {
 			 ", pf_feed_item_post_type());
 			 #var_dump($dquerystr);
 		} elseif ($limit == 'nominated') {
-			
+
 			$relate = pressforward()->relationships;
 			$rt = $relate->table_name;
 			$user_id = get_current_user_id();
@@ -224,8 +224,8 @@ class PF_Feed_Item {
 				AND {$wpdb->postmeta}.meta_key = 'sortable_item_date'
 				AND {$wpdb->postmeta}.meta_value > {$fromUnixTime}
 				AND {$wpdb->posts}.post_type = %s
-				AND {$wpdb->posts}.post_status = 'publish'			
-				AND ((({$wpdb->posts}.post_title LIKE '%s') OR ({$wpdb->posts}.post_content LIKE '%s')))				
+				AND {$wpdb->posts}.post_status = 'publish'
+				AND ((({$wpdb->posts}.post_title LIKE '%s') OR ({$wpdb->posts}.post_content LIKE '%s')))
 				AND {$wpdb->posts}.ID
 				NOT
 				IN (
@@ -239,10 +239,10 @@ class PF_Feed_Item {
 				ORDER BY {$wpdb->postmeta}.meta_value DESC
 				LIMIT {$pagefull} OFFSET {$pageTop}
 			 ", pf_feed_item_post_type(), '%'.$search.'%', '%'.$search.'%');
-			 
+
 			 #var_dump($dquerystr);
 
-		} elseif (is_user_logged_in()){
+		} elseif (is_user_logged_in() && (!isset($_GET['reveal']))){
 			$relate = pressforward()->relationships;
 			$rt = $relate->table_name;
 			$user_id = get_current_user_id();
@@ -268,6 +268,21 @@ class PF_Feed_Item {
 				LIMIT {$pageTop}, {$pagefull}
 			 ", pf_feed_item_post_type());
 
+		} elseif (isset($_GET['reveal']) && ('no_hidden' == $_GET['reveal'])) {
+			$relate = pressforward()->relationships;
+			$rt = $relate->table_name;
+			$user_id = get_current_user_id();
+			$dquerystr = $wpdb->prepare("
+				SELECT {$wpdb->posts}.*, {$wpdb->postmeta}.*
+				FROM {$wpdb->posts}, {$wpdb->postmeta}
+				WHERE {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id
+				AND {$wpdb->posts}.post_type = %s
+				AND {$wpdb->posts}.post_status = 'publish'
+				AND {$wpdb->postmeta}.meta_key = 'sortable_item_date'
+				AND {$wpdb->postmeta}.meta_value > {$fromUnixTime}
+				ORDER BY {$wpdb->postmeta}.meta_value DESC
+				LIMIT {$pageTop}, {$pagefull}
+			 ", pf_feed_item_post_type());
 		} else {
 		 $dquerystr = $wpdb->prepare("
 			SELECT {$wpdb->posts}.*, {$wpdb->postmeta}.*
@@ -302,8 +317,6 @@ class PF_Feed_Item {
 			//Switch the delete on to wipe rss archive posts from the database for testing.
 			//wp_delete_post( $post_id, true );
 			//print_r($id);
-			# If the transient exists than there is no reason to do any extra work.
-			if ( false === ( $feedObject['rss_archive_' . $c] = get_transient( 'pf_archive_' . $id ) ) ) {
 
 				$item_id = get_post_meta($post_id, 'item_id', true);
 				$source_title = get_post_meta($post_id, 'source_title', true);
@@ -335,9 +348,7 @@ class PF_Feed_Item {
 											$post_id,
 											$readable_status
 											);
-				set_transient( 'pf_archive_' . $id, $feedObject['rss_archive_' . $c], 60*10 );
 
-			}
 			$c++;
 			endforeach;
 
@@ -368,9 +379,9 @@ class PF_Feed_Item {
 	# The function we add to the action to clean our database.
 	public static function disassemble_feed_items() {
 		//delete rss feed items with a date past a certain point.
-		add_filter( 'posts_where', array( 'PF_Feed_Item', 'filter_where_older_sixty_days') );
+		add_filter( 'posts_where', array( 'PF_Feed_Item', 'filter_where_older') );
 		$queryForDel = new WP_Query( array( 'post_type' => pf_feed_item_post_type() ) );
-		remove_filter( 'posts_where', array( 'PF_Feed_Item', 'filter_where_older_sixty_days') );
+		remove_filter( 'posts_where', array( 'PF_Feed_Item', 'filter_where_older') );
 
 		// The Loop
 		while ( $queryForDel->have_posts() ) : $queryForDel->the_post();
@@ -390,13 +401,13 @@ class PF_Feed_Item {
 	# Method to manually delete rssarchival entries on user action.
 	public static function reset_feed() {
 		global $wpdb, $post;
-        
+
         $count = wp_count_posts(pf_feed_item_post_type());
         $pub_count = $count->publish;
         $pages = $pub_count/100;
         #var_dump($pages);
         if (($pages < 1) && ($pages > 0)){
-            $pages = 1;    
+            $pages = 1;
         } else {
             $pages = ceil($pages);
         }
@@ -406,27 +417,27 @@ class PF_Feed_Item {
                     'post_status' =>  'publish',
                     'posts_per_page'=>100,
                     'paged'  => $pages
-                );            
+                );
             $archiveQuery = new WP_Query( $args );
             #var_dump($archiveQuery);
             if ( $archiveQuery->have_posts() ) :
-    
-                while ( $archiveQuery->have_posts() ) : $archiveQuery->the_post(); 
+
+                while ( $archiveQuery->have_posts() ) : $archiveQuery->the_post();
                     $post_id = get_the_ID();
                      //Switch the delete on to wipe rss archive posts from the database for testing.
                     pressforward()->admin->pf_thing_deleter( $post_id, true );
-    
+
                 endwhile;
                 #print_r(__('All archives deleted.', 'pf'));
-            
+
             wp_reset_postdata();
             else:
-              #print_r( 'Sorry, no posts matched your criteria.' ); 
+              #print_r( 'Sorry, no posts matched your criteria.' );
             endif;
-            
+
             $pages--;
         }
-		
+
 
 	}
 
@@ -871,7 +882,7 @@ class PF_Feed_Item {
 
 	public static function set_ext_as_featured($postID,$ogImage){
 
-		if ( (strlen($ogImage)) > 1 ){
+		if ( 5 < (strlen($ogImage)) ){
 
 				//Remove Queries from the URL
 				$ogImage = preg_replace('/\?.*/', '', $ogImage);
@@ -897,43 +908,43 @@ class PF_Feed_Item {
 
 
 				}
+
+
+			//Methods within sourced from http://codex.wordpress.org/Function_Reference/wp_insert_attachment
+			//and http://wordpress.stackexchange.com/questions/26138/set-post-thumbnail-with-php
+
+			//Get the type of the image file. .jpg, .gif, or whatever
+			$filetype = wp_check_filetype( $ogCacheImg );
+
+			//Set the identifying variables for the about to be featured image.
+			$imgData = array(
+							//tell WordPress what the filetype is.
+							'post_mime_type' => $filetype['type'],
+							//set the image title to the title of the site you are pulling from
+							'post_title' => get_the_title($postID),
+							//WordPress tells us we must set this and set it to empty. Why? Dunno.
+							'post_content' => $imgTitle,
+							//Now we set the status of the image. It will inheret that of the post.
+							//If the post is published, then the image will be to.
+							'post_status' => 'inherit'
+						);
+			//WordPress needs an absolute path to the image, as opposed to the relative path we used before.
+			//I'm hoping that by using the upload_dir function (above) I can make this function work with multisite.
+			//$pathedImg = $uploadDir['url'] . $img;
+			//Now we insert the image as a WordPress attachement, and associate it with the current post.
+			$thumbid = wp_insert_attachment($imgData, $ogCacheImg, $postID);
+
+			//To set a thumbnail, you need metadata associated with an image.
+			//To get that we need to call the image.php file
+			require_once(ABSPATH . 'wp-admin/includes/image.php');
+			$metadata = wp_generate_attachment_metadata( $thumbid, $ogCacheImg );
+			//Now we attach the meta data to the image.
+			wp_update_attachment_metadata( $thumbid, $metadata );
+
+			//Now that we have a correctly meta-ed and attached image we can finally turn it into a post thumbnail.
+			update_post_meta($postID, '_thumbnail_id', $thumbid);
+
 		}
-
-		//Methods within sourced from http://codex.wordpress.org/Function_Reference/wp_insert_attachment
-		//and http://wordpress.stackexchange.com/questions/26138/set-post-thumbnail-with-php
-
-		//Get the type of the image file. .jpg, .gif, or whatever
-		$filetype = wp_check_filetype( $ogCacheImg );
-
-		//Set the identifying variables for the about to be featured image.
-		$imgData = array(
-						//tell WordPress what the filetype is.
-						'post_mime_type' => $filetype['type'],
-						//set the image title to the title of the site you are pulling from
-						'post_title' => get_the_title($postID),
-						//WordPress tells us we must set this and set it to empty. Why? Dunno.
-						'post_content' => $imgTitle,
-						//Now we set the status of the image. It will inheret that of the post.
-						//If the post is published, then the image will be to.
-						'post_status' => 'inherit'
-					);
-		//WordPress needs an absolute path to the image, as opposed to the relative path we used before.
-		//I'm hoping that by using the upload_dir function (above) I can make this function work with multisite.
-		//$pathedImg = $uploadDir['url'] . $img;
-		//Now we insert the image as a WordPress attachement, and associate it with the current post.
-		$thumbid = wp_insert_attachment($imgData, $ogCacheImg, $postID);
-
-		//To set a thumbnail, you need metadata associated with an image.
-		//To get that we need to call the image.php file
-		require_once(ABSPATH . 'wp-admin/includes/image.php');
-		$metadata = wp_generate_attachment_metadata( $thumbid, $ogCacheImg );
-		//Now we attach the meta data to the image.
-		wp_update_attachment_metadata( $thumbid, $metadata );
-
-		//Now that we have a correctly meta-ed and attached image we can finally turn it into a post thumbnail.
-		update_post_meta($postID, '_thumbnail_id', $thumbid);
-
-
 	}
 
 
@@ -941,9 +952,12 @@ class PF_Feed_Item {
 	/**
 	 * Filter 'posts_where' to return only posts older than sixty days
 	 */
-	public static function filter_where_older_sixty_days( $where = '' ) {
+	public static function filter_where_older( $where = '' ) {
+		$retain = get_option('pf_retain_time', 2);
+		$retainMonths = $retain*30;
+		$str = '-'.$retainMonths.' days';
 		// posts before the last 60 days
-		$where .= " AND post_date < '" . date('Y-m-d', strtotime('-60 days')) . "'";
+		$where .= " AND post_date < '" . date('Y-m-d', strtotime($str)) . "'";
 		return $where;
 	}
 
