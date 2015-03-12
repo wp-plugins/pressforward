@@ -1,5 +1,5 @@
 === PressForward ===
-Contributors: PressForward, AramZS, boonebgorges, lmrhody, asmmap, regan008, joanftroyano, clioweb
+Contributors: PressForward, AramZS, boonebgorges, lmrhody, regan008, joanftroyano, clioweb
 Donate link:
 Tags: aggregate, aggregation, aggregator, atom, attribution, circulate, collect, community, content curation, curate, curation, curation tool, discuss, distribute, editorial, feed, network, news, opml, OPML, read, reader, reblog, reblogging, republish, review, RSS, rss, share, syndicate, syndication, workflow
 Requires at least: 3.0.1
@@ -21,18 +21,21 @@ PressForward is a free plugin that provides an editorial workflow for content ag
 * Share content using best practices for attribution and citation
 
 **Collect**
+
 * Aggregate content using RSS/Atom feeds
 * Capture any web content with a bookmarklet
 * Import full text, image, video content, and post metadata 
 * Batch add feeds using OPML files
-* Integrate tandardized content with [Readability](https://www.readability.com/)
+* Integrate standardized content with [Readability](https://www.readability.com/)
 
 **Discuss**
+
 * Discuss content internally with private commenting
 * Count nominations from teams of contributors and editors 
 * Expose item metadata, including the name of the source and method of nomination
 
 **Share**
+
 * Allow contributors to send items directly to their own Twitter account 
 * Attach full content, attribution link, canonical URL, and metadata to WordPress Posts as Draft
 * Republish any content type supported by your theme (text, image, quote, snippet, etc.)
