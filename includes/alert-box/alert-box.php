@@ -1,27 +1,27 @@
 <?php
 if (!class_exists('The_Alert_Box')){
 
-    class The_Alert_Box {
+  class The_Alert_Box {
 
-        public static $status = 'alert_specimen';
+    public static $status = 'alert_specimen';
 		public static $option_name = 'alert_box_options';
 		var $settings;
 		var $alert_name;
 
-        public static function init() {
-            static $instance;
+    public static function init() {
+      static $instance;
 
-            if ( ! is_a( $instance, 'The_Alert_Box' ) ) {
-                $instance = new self();
-            }
+      if ( ! is_a( $instance, 'The_Alert_Box' ) ) {
+        $instance = new self();
+      }
 
-            return $instance;
-        }
+      return $instance;
+    }
 
         /**
          * Constructor
          */
-        public function __construct() {
+    public function __construct() {
 			#$this->status = self::$status;
 			#$this->option_name = self::$option_name;
 			$this->settings = get_option( self::option_name(), array() );
@@ -36,7 +36,7 @@ if (!class_exists('The_Alert_Box')){
 			}
 			$this->alert_name = $this->alert_name_maker();
 			#add_action( 'admin_init', array($this, 'settings_field_settings_page') );
-        }
+    }
 
 		public function status(){
 			return self::$status;
@@ -61,7 +61,7 @@ if (!class_exists('The_Alert_Box')){
             ) );
         }
 
-		private function depreciated_alert_name_filters($alert_names){
+		private static function depreciated_alert_name_filters($alert_names){
       $alert_names['dismiss_all'] =  apply_filters('ab_alert_specimens_dismiss_all_text', $alert_names['dismiss_all']);
       $alert_names['delete_all_check'] =  apply_filters('ab_alert_specimens_check_message', $alert_names['delete_all_check']);
       $alert_names['dismiss_all_check'] =  apply_filters('ab_alert_specimens_check_dismiss_message', $alert_names['dismiss_all_check']);
@@ -69,36 +69,43 @@ if (!class_exists('The_Alert_Box')){
       return $alert_names;
     }
 
-    public function alert_name_maker(){
+    private static function alert_name_maker($label = false){
 			$alert_names = array(
-				'name'               => _x( 'Alerts', 'post type general name', 'pf' ),
-				'singular_name'      => _x( 'Alert', 'post type singular name', 'pf' ),
-				'menu_name'          => _x( 'Alerts', 'admin menu', 'pf' ),
-				'name_admin_bar'     => _x( 'Alert', 'add new on admin bar', 'pf' ),
-				'add_new'            => _x( 'Add Alert', 'alert', 'pf' ),
-				'add_new_item'       => __( 'Add New Alert', 'pf' ),
-				'new_item'           => __( 'New Alert', 'pf' ),
-				'edit_item'          => __( 'Edit Alert', 'pf' ),
-				'view_item'          => __( 'View Alert', 'pf' ),
-				'all_items'          => __( 'All Alerts', 'pf' ),
-				'search_items'       => __( 'Search Alerts', 'pf' ),
-				'parent_item_colon'  => __( 'Parent Alerts:', 'pf' ),
-				'not_found'          => __( 'No alerts found.', 'pf' ),
-				'not_found_in_trash' => __( 'No alerts found in Trash.', 'pf' ),
-        'dismiss_one_check' => __( 'Are you sure you want to dismiss the alert on', 'pf' ),
-        'dismiss_all_check' => __( 'Are you sure you want to dismiss all alerts?', 'pf' ),
-        'dismiss_all'       => __( 'Dismiss all alerts', 'pf' ),
-        'delete_all_check'  => __( 'Are you sure you want to delete all posts with alerts?', 'pf' ),
-        'delete_all'         => __( 'Delete all posts with alerts', 'pf' ),
-        'turned_off'		 => __( 'Alert boxes not active.', 'pf')
+				'name'                => _x( 'Alerts', 'post type general name', 'pf' ),
+				'singular_name'       => _x( 'Alert', 'post type singular name', 'pf' ),
+				'menu_name'           => _x( 'Alerts', 'admin menu', 'pf' ),
+				'name_admin_bar'      => _x( 'Alert', 'add new on admin bar', 'pf' ),
+				'add_new'             => _x( 'Add Alert', 'alert', 'pf' ),
+				'add_new_item'        => __( 'Add New Alert', 'pf' ),
+				'new_item'            => __( 'New Alert', 'pf' ),
+				'edit_item'           => __( 'Edit Alert', 'pf' ),
+				'view_item'           => __( 'View Alert', 'pf' ),
+				'all_items'           => __( 'All Alerts', 'pf' ),
+				'search_items'        => __( 'Search Alerts', 'pf' ),
+				'parent_item_colon'   => __( 'Parent Alerts:', 'pf' ),
+				'not_found'           => __( 'No alerts found.', 'pf' ),
+				'not_found_in_trash'  => __( 'No alerts found in Trash.', 'pf' ),
+        'dismiss_one_check'   => __( 'Are you sure you want to dismiss the alert on', 'pf' ),
+        'dismiss_all_check'   => __( 'Are you sure you want to dismiss all alerts?', 'pf' ),
+        'dismiss_all'         => __( 'Dismiss all alerts', 'pf' ),
+        'delete_all_check'    => __( 'Are you sure you want to delete all posts with alerts?', 'pf' ),
+        'delete_all'          => __( 'Delete all posts with alerts', 'pf' ),
+        'dismissed'           => __( 'Draft' ),
+        'all_well'            => __( 'No problems!', 'pf' ),
+        'turn_on'             => __( 'Turn alerts on.', 'pf' ),
+        'activate_q'          => __( 'Active Alert Boxes?', 'pf' ),
+        'turned_off'		      => __( 'Alert boxes not active.', 'pf')
 			);
       $alert_names =  self::depreciated_alert_name_filters($alert_names);
 			$alert_names = apply_filters('ab_alert_specimens_labels', $alert_names);
-
-			return $alert_names;
+      if (!$label || !array_key_exists($label, $alert_names)) {
+        return $alert_names;
+      } else {
+        return $alert_names[$label];
+      }
 		}
 
-    public function alert_label($label = 'name', $nocaps = false){
+    public static function alert_label($label = 'name', $nocaps = false){
       $labels = self::alert_name_maker();
       if (empty($labels[$label])){
         return $labels['name'];
@@ -208,7 +215,7 @@ if (!class_exists('The_Alert_Box')){
 
             $post_status_d = get_post_meta( $post_id, 'pre_alert_status', true);
             if (empty($post_status_d)){
-				$post_status_d = array();
+				        $post_status_d = array();
                 $post_status_d['status'] = 'draft';
                 $post_status_d['type'] = $_POST['post_type'];
             }
@@ -340,7 +347,7 @@ if (!class_exists('The_Alert_Box')){
                    'what'=>'the_alert_box',
                    'action'=>'remove_alerted_posts',
                    'id'=>$pages,
-                   'data'=> $alerts->post_count . __(' posts deleted.', 'pf'),
+                   'data'=> $alerts->post_count . ' ' . __('posts deleted.', 'pf'),
                     'supplemental' => array(
                         'buffered' => ob_get_contents()
 				    )
@@ -358,12 +365,12 @@ if (!class_exists('The_Alert_Box')){
             return;
           }
 
-          edit_post_link(get_the_title(), '<span style="color:red;font-weight:bold;">'. __('Alert', 'pf') . '</span> for ', ': '.$this->get_bug_type(get_the_ID()));
+          edit_post_link(get_the_title(), '<span style="color:red;font-weight:bold;">'. self::alert_label('singular_name') . '</span> for ', ': '.$this->get_bug_type(get_the_ID()));
           echo ' ';
           edit_post_link(__('Edit', 'pf'));
           echo ' ';
           if (current_user_can('edit_others_posts')){
-            echo '| <a href="#" class="alert-dismisser" title="'. __('Dismiss', 'pf') . '" data-alert-post-id="'. get_the_ID() .'" data-alert-dismiss-check="'.sprintf(__('Are you sure you want to dismiss the alert on %s', 'pf'), get_the_title()).'" '.self::alert_box_type_data( get_post_type( get_the_ID() ) ).' >' . __('Dismiss', 'pf').'</a>';
+            echo '| <a href="#" class="alert-dismisser" title="'. __('Dismiss', 'pf') . '" data-alert-post-id="'. get_the_ID() .'" data-alert-dismiss-check="'. self::alert_label('dismiss_one_check') . ' ' . get_the_title(). '?' .'" '.self::alert_box_type_data( get_post_type( get_the_ID() ) ).' >' . __('Dismiss', 'pf').'</a>';
           }
           echo ' ';
           if (current_user_can('delete_others_posts')){
@@ -392,30 +399,24 @@ if (!class_exists('The_Alert_Box')){
             echo '</p>';
 					endwhile;
 					wp_reset_postdata();
-					$alertCheck = __('Are you sure you want to delete all posts with alerts?', 'pf');
-					$alertCheck = apply_filters('ab_alert_specimens_check_message', $alertCheck);
+					$alertCheck = self::alert_label('delete_all_check');
           if (current_user_can('edit_others_posts')){
-                $editText = __('Dismiss all alerts', 'pf');
-                $editText = apply_filters('ab_alert_specimens_dismiss_all_text', $editText);
-              $editCheck = __('Are you sure you want to dismiss all alerts?', 'pf');
-              $editCheck = apply_filters('ab_alert_specimens_check_dismiss_message', $editCheck);
+              $editText = self::alert_label('dismiss_all');
+              $editCheck = self::alert_label('dismiss_all_check');
 
                 echo '<p><a href="#" id="dismiss_all_alert_specimens" style="color:GoldenRod;font-weight:bold;" title="' . $editText . '" data-dismiss-all-check="' . $editCheck . '" '.self::alert_box_type_data($q).' >' . $editText . '</a></p>';
           }
 				if (current_user_can('delete_others_posts')){
-    					$deleteText = __('Delete all posts with alerts', 'pf');
-    					$deleteText = apply_filters('ab_alert_specimens_delete_all_text', $deleteText);
-
+    					$deleteText = self::alert_label('delete_all'); 
     					echo '<p><a href="#" id="delete_all_alert_specimens" style="color:red;font-weight:bold;" title="' . __('Delete all posts with alerts', 'pf') . '" alert-check="' . $alertCheck . '" '.self::alert_box_type_data($q).' >' . $deleteText . '</a></p>';
 				}
 				} else {
-					$return_string = __('No problems!', 'pf');
-					$return_string = apply_filters('ab_alert_safe', $return_string);
+					$return_string = self::alert_label('all_well'); 
 					echo $return_string;
 
 				}
 			} else {
-				echo 'Alert boxes not active.';
+				echo self::alert_label('turned_off'); 
 			}
         }
 
@@ -498,7 +499,7 @@ if (!class_exists('The_Alert_Box')){
               'parent_element'   =>  'alert_check',
               'element'          =>  'alert_switch',
               'type'             =>  'checkbox',
-              'label_for'        =>  __('Turn alerts on.', 'pf'),
+              'label_for'        =>  self::alert_label('turn_on'),
               'default'          =>  'true'
 			);
 			return array('switch' => $switch);
@@ -508,7 +509,7 @@ if (!class_exists('The_Alert_Box')){
 			#var_dump('die');die();
 			register_setting( 'general', self::$option_name, array($this, 'validator')  );
 			$args = the_alert_box()->settings_fields();
-			add_settings_field(	'alert_box_check', __('Active Alert Boxes?', 'pf'), array($this, 'settings_field_maker'), 'general', 'default', $args['switch']);
+			add_settings_field(	'alert_box_check', self::alert_label('activate_q'), array($this, 'settings_field_maker'), 'general', 'default', $args['switch']);
 		}
 
 		public function validator($input){

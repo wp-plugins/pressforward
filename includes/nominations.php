@@ -7,9 +7,10 @@ class PF_Nominations {
 	function __construct() {
 		add_action( 'init', array( $this, 'register_post_type' ) );
 		add_action('edit_post', array( $this, 'send_nomination_for_publishing'));
-		add_filter( 'manage_edit-nomination_columns', array ($this, 'edit_nominations_columns') );
-		add_action( 'manage_nomination_posts_custom_column',  array ($this, 'nomination_custom_columns') );
-		add_filter( "manage_edit-nomination_sortable_columns", array ($this, "nomination_sortable_columns") );
+		add_filter( 'manage_edit-nomination_columns', array($this, 'edit_nominations_columns') );
+		add_action( 'manage_nomination_posts_custom_column',  array($this, 'nomination_custom_columns') );
+		add_filter( "manage_edit-nomination_sortable_columns", array($this, "nomination_sortable_columns") );
+		add_action( 'feeder_menu', array($this, "nominate_this_tile"), 11 );
 
 	}
 
@@ -139,22 +140,57 @@ class PF_Nominations {
 
 	}
 
-	public function is_nominated($item_id, $post_type = false, $update = false){
-		if (!$post_type) {
-			$post_type = array('post', 'nomination');
-		}
+	public function get_first_nomination($item_id, $post_type){
 		$q = pf_get_posts_by_id_for_check($post_type, $item_id, true);
 		if ( 0 < $q->post_count ){
 			$nom = $q->posts;
 			$r = $nom[0];
-			pf_log('Existing post at '.$r);
+			return $r;
+		} else {
+			return false;
 		}
-		else {
+	}
+
+	public function is_nominated($item_id, $post_type = false, $update = false){
+		if (!$post_type) {
+			$post_type = array('post', 'nomination');
+		}
+		$attempt = $this->get_first_nomination($item_id, $post_type);
+		if (!empty($attempt)){
+			$r = $attempt;
+			pf_log('Existing post at '.$r);
+		} else {
 			$r = false;
 		}
 		/* Restore original Post Data */
 		wp_reset_postdata();
 		return $r;
+	}
+
+	public function resolve_nomination_state($item_id){
+		$pt = array('nomination');
+		if ($this->is_nominated($item_id, $pt)){
+			$attempt = $this->get_first_nomination($item_id, $pt);
+			if (!empty($attempt)){
+				$nomination_id = $attempt;
+				$nominators = pf_retrieve_meta($nomination_id, 'nominator_array');
+				if (empty($nominators)){
+					pf_log('There is no one left who nominated this item.');
+					pf_log('This nomination has been taken back. We will now remove the item.');
+					pressforward()->admin->pf_thing_deleter($nomination_id, true, 'nomination');
+				} else {
+					pf_log('Though one user retracted their nomination, there are still others who have nominated this item.');
+				}
+			} else {
+				pf_log('We could not find the nomination to resolve the state of.');
+			}
+		} else {
+			pf_log('There is no nomination to resolve the state of.');
+		}
+	}
+
+	public function nominate_this_tile(){
+		pressforward()->form_of->nominate_this('as_feed');	
 	}
 
 	public function change_nomination_count($id, $up = true){
@@ -206,6 +242,7 @@ class PF_Nominations {
 				$this->toggle_nominator_array($nomination_state, false);
 				$check = false;
 				pf_log( 'user_unnonminated' );
+				$this->resolve_nomination_state($item_id);
 			} else {
 				$this->change_nomination_count($nomination_state);
 				$this->toggle_nominator_array($nomination_state);
@@ -596,6 +633,86 @@ class PF_Nominations {
 
 		} else {
 			return false;
+		}
+	}
+	
+	public function simple_nom_to_draft($id = false){
+		global $post;
+		$pf_drafted_nonce = $_POST['pf_nomination_nonce'];
+		if (! wp_verify_nonce($pf_drafted_nonce, 'nomination')){
+			die(__('Nonce not recieved. Are you sure you should be drafting?', 'pf'));
+		} else {
+			if (!$id){
+				$id = $_POST['nom_id'];
+				$nom = get_post($id);
+				$item_id = pf_retrieve_meta($id, 'item_id');
+			}
+			$post_check = $this->is_nominated($item_id, 'post', false);
+			if (true != $post_check) {
+				
+				$item_link = pf_retrieve_meta($id, 'item_link');
+				$author = get_the_item_author($id);
+				$content = $nom->post_content;
+				$title = $nom->post_title;
+				$data = array(
+					'post_status' => 'draft',
+					'post_type' => 'post',
+					'post_title' => $title,
+					'post_content' => $content
+				);
+				# Check if the item was rendered readable, if not, make it so.
+				$readable_state = pf_get_post_meta($id, 'readable_status', true);
+				if ($readable_state != 1){
+					$readArgs = array(
+						'force' => false,
+						'descrip' => htmlspecialchars_decode($content),
+						'url' => $item_link,
+						'authorship' => $author
+					);
+					$readReady = pressforward()->readability->get_readable_text($readArgs);
+					#var_dump($readReady); die();
+					$data['post_content'] = $readReady['readable'];
+				}
+				
+				$new_post_id = wp_insert_post( $data, true );
+##Check
+				add_post_meta($id, 'nom_id', $id, true);
+				pf_meta_transition_post($id, $new_post_id);
+				$already_has_thumb = has_post_thumbnail($id);
+				if ($already_has_thumb)  {
+					$post_thumbnail_id = get_post_thumbnail_id( $id );
+					set_post_thumbnail($new_post_id, $post_thumbnail_id);
+				}
+				
+				$response = array(
+					'what' => 'draft',
+					'action' => 'simple_nom_to_draft',
+					'id' => $new_post_id,
+					'data' => $data['post_content'] . ' drafted.',
+					'supplemental' => array(
+						'content' => $content,
+						'originID' => $id,
+						'repeat' => $post_check,
+						'buffered' => ob_get_contents()
+					)
+				);
+				
+			} else {
+				$response = array(
+					'what' => 'draft',
+					'action' => 'simple_nom_to_draft',
+					'id' => $id,
+					'data' => 'Failed due to existing nomination or lack of ID.',
+					'supplemental' => array(
+						'repeat' => $post_check,
+						'buffered' => ob_get_contents()
+					)
+				);
+			}
+			$xmlResponse = new WP_Ajax_Response($response);
+			$xmlResponse->send();
+			ob_end_flush();
+			die();
 		}
 	}
 

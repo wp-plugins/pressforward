@@ -64,7 +64,7 @@ class PF_Feeds_Schema {
 	 */
 	public function register_feed_post_type() {
 		$labels = array(
-			'name'               => __( 'Feeds', 'pf' ),
+			'name'               => __( 'Subscribed Feeds', 'pf' ),
 			'singular_name'      => __( 'Feed', 'pf' ),
 			'add_new'            => _x( 'Add New', 'pf', 'add new feed' ),
 			'all_items'          => __( 'All Feeds', 'pf' ),
@@ -252,6 +252,51 @@ class PF_Feeds_Schema {
 
 	}
 
+	public function get_feeds_without_folders($ids = true){
+		   $q = new WP_Query( 
+		   				array( 
+		 		            'post_type' => pressforward()->pf_feeds->post_type,
+		 		            'fields'	=>	'ids',
+		 		            'orderby'	=> 'title',
+		 		            'order'		=> 'ASC',
+		 		            'nopaging' => true,
+		 		            'tax_query' => array( 
+		 		                array( 
+		 		                    'taxonomy' => pressforward()->pf_feeds->tag_taxonomy, 
+		 		                    'operator' => 'NOT EXISTS', 
+		 		                ), 
+		 		            ), 
+ 		       			) 
+		   	);
+		   $ids = $q->posts;
+		   return $ids;
+
+
+	}
+
+	public function link_to_see_all_feeds_and_folders(){
+		?>
+		<li class="feed" id="the-whole-feed-list">
+		<?php
+
+			printf('<a href="%s" title="%s">%s</a>', $feed_obj->ID, $feed_obj->post_title, $feed_obj->post_title );
+
+		?>
+		</li>
+		<?php
+	}
+
+	public function the_feeds_without_folders(){
+		global $wp_version;
+		#var_dump((float)$wp_version);
+		if ( 4.0 < (float)$wp_version){
+			$the_other_feeds = $this->get_feeds_without_folders();
+			foreach ($the_other_feeds as $a_feed_id){
+				$this->the_feed($a_feed_id);
+			}
+		}
+	}
+
 	public function the_feed_folders($obj = false){
 		if(!$obj){
 			$obj = $this->get_feed_folders();
@@ -268,6 +313,8 @@ class PF_Feeds_Schema {
 					</li>
 					<?php
 				}
+				
+				$this->the_feeds_without_folders();
 				?>
 		</ul>
 		<?php
@@ -380,6 +427,26 @@ class PF_Feeds_Schema {
 			wp_die('Unable to update feedlist option with new smaller feedlist.');
 		}
 
+	}
+
+	/**
+	 * Set the last_checked value for the parent feed.
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param int $feed_item_id ID of the feed item.
+	 * @return bool
+	 */
+	public function set_feed_last_checked( $feed_id ) {
+		if (empty($feed_id)){
+			$feed_id = get_the_ID();
+		}
+
+		if ( ! $feed_id ) {
+			return false;
+		}
+
+		return update_post_meta( $feed_id, 'pf_feed_last_checked', date( 'Y-m-d H:i:s' ) );
 	}
 
 	# Not only is this moving feeds over into feed CPT posts, but this methodology will insure a time-out won't force the process to restart.

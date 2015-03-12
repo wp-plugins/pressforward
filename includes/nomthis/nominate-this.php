@@ -12,12 +12,19 @@ define('WP_ADMIN', false);
 global $pagenow;
 $wp_bootstrap = dirname(dirname(dirname(dirname(dirname(dirname(__FILE__))))) );
 #echo '<pre>'; var_dump($_POST); die();
+$wp_bootstrap_d = dirname(dirname(dirname(dirname(dirname(dirname(dirname(__FILE__))))) ));
+
 if (is_dir($wp_bootstrap.'/wp-admin')){
    $wp_bootstrap = $wp_bootstrap.'/wp-admin';
 } elseif (is_dir($wp_bootstrap.'/wordpress/wp-admin')){
    $wp_bootstrap = $wp_bootstrap.'/wordpress/wp-admin';
+} elseif (is_dir($wp_bootstrap_d.'/wordpress/wp-admin')) {
+	$wp_bootstrap = $wp_bootstrap_d.'/wordpress/wp-admin';
+} elseif (is_dir($wp_bootstrap.'/data/current/wp-admin')) {
+	$wp_bootstrap = $wp_bootstrap.'/data/current/wp-admin';
 } else {
-  echo 'Nominate This can not find your WP-Admin directory'; die();
+	echo 'Base directory attempt at: <pre>'; var_dump($wp_bootstrap);
+  	echo 'Nominate This can not find your WP-Admin directory'; die();
 }
 
 /** WordPress Administration Bootstrap */
@@ -658,24 +665,6 @@ $admin_body_class .= ' locale-' . sanitize_html_class( strtolower( str_replace( 
 				</div>
 			</div>
 
-			<div id="tagsdiv-post_tag" class="postbox">
-				<div class="handlediv" title="<?php esc_attr_e( 'Click to toggle','pf' ); ?>"><br /></div>
-				<h3><span><?php _e('Tags'); ?></span></h3>
-				<div class="inside">
-					<div class="tagsdiv" id="post_tag">
-						<div class="jaxtag">
-							<label class="screen-reader-text" for="newtag"><?php _e('Tags','pf'); ?></label>
-							<input type="hidden" name="tax_input[post_tag]" class="the-tags" id="tax-input[post_tag]" value="" />
-							<div class="ajaxtag">
-								<input type="text" name="newtag[post_tag]" class="newtag form-input-tip" size="16" autocomplete="off" value="" />
-								<input type="button" class="button tagadd" value="<?php esc_attr_e('Add','pf'); ?>" />
-							</div>
-						</div>
-						<div class="tagchecklist"></div>
-					</div>
-					<p class="tagcloud-link"><a href="#titlediv" class="tagcloud-link" id="link-post_tag"><?php _e('Choose from the most used tags','pf'); ?></a></p>
-				</div>
-			</div>
 		</div>
 	</div>
     <?php } ?>

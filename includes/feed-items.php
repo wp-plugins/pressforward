@@ -118,6 +118,13 @@ class PF_Feed_Item {
 
 	// STATIC UTILITY METHODS
 
+	/**
+	* Set word count for an item
+	*
+	* @since 2.0.0
+	*
+	*
+	*/
 	public static function set_word_count( $post_id, $content = false ) {
 		if ( false === $content ) {
 			$post = get_post( $post_id );
@@ -127,69 +134,134 @@ class PF_Feed_Item {
 		$content_array = explode( ' ', strip_tags( $content ) );
 		$word_count = count( $content_array );
 
-		return update_post_meta( $post_id, 'pf_feed_item_word_count', $word_count );
+		return pf_update_meta( $post_id, 'pf_feed_item_word_count', $word_count );
 	}
 
+
+	/**
+	* Set source title.
+	*
+	* @since 2.0.0
+	*
+	*
+	*/
 	public static function set_source( $post_id, $source ) {
-		return update_post_meta( $post_id, 'pf_feed_item_source', $source );
+		return pf_update_meta( $post_id, 'pf_feed_item_source', $source );
 	}
 
+	/**
+	* Return an array of known aggregation services.
+	*
+	* @since 3.4.5
+	*
+	* @return array An array of URLs with aggregation URL host parts.
+	*
+	*/
+	public static function aggregation_services(){
+		return array(
+						'Google'  =>	'google.com'
+					);
+	}
+
+	/**
+	* Check a URL for an aggregation service's forward and return true or false.
+	*
+	* @since 3.4.5
+	*
+	* @param string $url A web address URI.
+	* @return bool True value for a submitted URL that matches an aggregation service.
+	*
+	*/
+	public static function url_is_aggregation_service($url){
+		$check = false;
+		$services = self::aggregation_services();
+		foreach ($services as $service){
+			$pos = strpos($url, $service);
+			if(!empty($pos)){
+				$check = true;
+			}
+		}
+		return $check;
+	}
+
+	/**
+	* Examine a URL and resolve it as needed.
+	*
+	* @since 3.4.5
+	*
+	* @param string $url A web address URI.
+	* @return bool True value for a submitted URL that matches an aggregation service.
+	*
+	*/
+	public static function resolve_a_url($url){
+		$url_array = parse_url($url);
+		if (empty($url_array['host'])){
+			return;
+		} else {
+			$check = self::url_is_aggregation_service($url);
+			if ($check){
+				$resolver = new URLResolver();
+				$url = $resolver->resolveURL($url)->getURL();
+			}
+		}
+
+		return $url;
+
+	}
+
+	/**
+	* Set source URL
+	*
+	* This function is meant to find and set the true source URL on an item,
+	* it seeks to fully resolve URLs from known aggregation services.
+	*
+	* @since 3.4.5
+	*
+	*
+	*/
 	public static function set_source_link( $post_id, $item_url ) {
-		$url_array = parse_url($item_url);
+		$url = self::resolve_a_url($item_url);
+		$url_array = parse_url($url);
 		if (empty($url_array['host'])){
 			return;
 		}
 		$source_url = 'http://' . $url_array['host'];
-		$google_check = strpos($source_url, 'google.com');
-		if (!empty($google_check)){
-			$resolver = new URLResolver();
-			$source_url = $resolver->resolveURL($item_url)->getURL();
-			$url_array = parse_url($source_url);
-			$source_url = 'http://' . $url_array['host'];
-		}
 		return pf_update_meta( $post_id, 'pf_source_link', $source_url );
 	}
 
+
+	/**
+	* Retrieve the item source's link.
+	*
+	* Retrieve the link for the item's source. Attempt to fully
+	* resolve the URL for known aggregation services.
+	*
+	* @since 3.4.5
+	*
+	*
+	*/
 	public static function get_source_link( $post_id ) {
-		$source_url = pf_retrieve_meta($post_id, 'pf_source_link');
-		$google_check = strpos($source_url, 'google.com');
-		if ((empty($source_url)) || !empty($google_check)){
-			$item_url = pf_retrieve_meta($post_id, 'item_link');
-			$source_url = pressforward()->pf_feed_items->resolve_source_url($item_url);
-			pf_update_meta( $post_id, 'pf_source_link', $source_url );
+		$url = pf_retrieve_meta($post_id, 'pf_source_link');
+		if (empty($url)){
+			$url = pf_retrieve_meta($post_id, 'item_link');
 		}
+		$source_url = pressforward()->pf_feed_items->resolve_a_url($url);
+		pf_update_meta( $post_id, 'pf_source_link', $source_url );
 		return $source_url;
 	}
 
 	public static function resolve_source_url($url){
+		$url = pressforward()->pf_feed_items->resolve_a_url($url);
 		$url_array = parse_url($url);
 		if (empty($url_array['host'])){
-			return $url;
+			return;
 		}
-		$source_url = $url_array['scheme'] . '://' . $url_array['host'];
-		#var_dump($item_url);
-		$google_check = strpos($source_url, 'google.com');
-		if (!empty($google_check)){
-			$resolver = new URLResolver();
-			$url = $resolver->resolveURL($url)->getURL();
-			$url_array = parse_url($url);
-			$source_url = 'http://' . $url_array['host'];
-			#var_dump('Checking for more: '.$source_url);
-		}
+		$source_url = 'http://' . $url_array['host'];
 		return $source_url;
 	}
 
 	public static function resolve_full_url($url){
-		$url_array = parse_url($url);
-		if (empty($url_array['host'])){
-			return $url;
-		}
-		#var_dump($item_url);
-		$google_check = strpos($url, 'google.com');
-		if (!empty($google_check)){
-			$resolver = new URLResolver();
-			$url = $resolver->resolveURL($url)->getURL();
-		}
+		$url = pressforward()->pf_feed_items->resolve_a_url($url);
 		return $url;
 	}
 
@@ -938,10 +1010,41 @@ class PF_Feed_Item {
 
 	}
 
+	public function resolve_image_type($img_url){
+		$type = wp_check_filetype($img_url);
+		return $type['ext'];
+	}
+
+	public function assert_url_scheme($url){
+		$url_parts = parse_url($url);
+		$slash_check = substr ( $url , 0 , 2 );
+		if (empty($url_parts['scheme']) && ( '//' == $slash_check )){
+			$url = 'http:' . $url;
+		} elseif (empty($url_parts['scheme']) && ( '//' != $slash_check )) {
+			$url = 'http://' . $url;
+		}
+
+		return $url;
+
+	}
+
 	public static function get_ext_og_img($link){
 		$node = pressforward()->og_reader->fetch($link);
 		$itemFeatImg = $node->image;
+		
 		return $itemFeatImg;
+	}
+
+	public function assure_image($filepath){
+		$img_info = getimagesize($filepath);
+		# Your 1x1 tracking or dummy images have no domain here!
+		if ( ( 2 > $img_info[0] ) || ( 2 > $img_info[1] ) ){
+			# I assure you this is not an image
+			return false;	
+		} else {
+			# This is an image I assure you.
+			return true;
+		}
 	}
 
 	public static function set_ext_as_featured($postID,$ogImage){
@@ -950,41 +1053,57 @@ class PF_Feed_Item {
 
 				//Remove Queries from the URL
 				#$ogImage = preg_replace('/\?.*/', '', $ogImage);
-
+				$ogImage = pressforward()->pf_feed_items->assert_url_scheme($ogImage);
 				$imgParts = pathinfo($ogImage);
 				$imgExt = $imgParts['extension'];
 				$imgTitle = $imgParts['filename'];
-
-				if ($imgExt != ('jpg'||'png'||'jrpg'||'bmp'||'gif')){
-					//print_r('bad og img');
+				$resolved_img_ext = pressforward()->pf_feed_items->resolve_image_type($ogImage);
+				if (($resolved_img_ext != ('jpg'||'png'||'jrpg'||'bmp'||'gif'||'jpeg')) || ($imgExt != ('jpg'||'png'||'jrpg'||'bmp'||'gif'||'jpeg'))){
+					#var_dump($resolved_img_ext); die();
 					return;
 				}
 
 				$imgTitle = sanitize_file_name($imgTitle);
 				# Let's not get crazy here. 
 				$imgTitle = substr($imgTitle, 0, 100);
+				if (strpos($imgTitle, '.') !== FALSE){
+					$imgTitle = 'retrieved-featured-image';
+				} else {
+					$imgTitle = $imgTitle;
+				}
 
 				//'/' . get_option(upload_path, 'wp-content/uploads') . '/' . date("o")
 				$uploadDir = wp_upload_dir();
-				$ogCacheImg = $uploadDir['path'] . '/' . $postID . "-" . $imgTitle . "." . $imgExt;
+				$ogCacheImg = $uploadDir['path'] . '/' . $postID . "-" . $imgTitle . "." . $resolved_img_ext;
+				#var_dump($ogCacheImg); die();
 
 				if ( !file_exists($ogCacheImg) ) {
 
 
 					$result  = copy($ogImage, $ogCacheImg);
 
+					if (!$result) {
+						return;
+					}
+
 
 				}
 
+
+			if ( false == pressforward()->pf_feed_items->assure_image($ogCacheImg) ) {
+				return;
+			}
 
 			//Methods within sourced from http://codex.wordpress.org/Function_Reference/wp_insert_attachment
 			//and http://wordpress.stackexchange.com/questions/26138/set-post-thumbnail-with-php
 
 			//Get the type of the image file. .jpg, .gif, or whatever
 			$filetype = wp_check_filetype( $ogCacheImg );
-
+			
+			
 			//Set the identifying variables for the about to be featured image.
 			$imgData = array(
+							'guid'           => $ogCacheImg, 
 							//tell WordPress what the filetype is.
 							'post_mime_type' => $filetype['type'],
 							//set the image title to the title of the site you are pulling from

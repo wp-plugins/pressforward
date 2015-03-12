@@ -206,6 +206,9 @@ class PF_Feed_Retrieve {
 #			pf_log( $feed_url );
 			pf_log( ' from ' );
 			pf_log( $aFeed->guid );
+			pf_log('Set last_checked for '.$aFeed->ID);
+			$result = pressforward()->pf_feeds->set_feed_last_checked($aFeed->ID);
+			pf_log($result);
 
 			# @todo the above log may not work what what is being retrieved is an object.
 
