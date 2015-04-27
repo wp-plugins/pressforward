@@ -21,21 +21,6 @@ PressForward is a free plugin that provides an editorial workflow for content ag
 * Share content using best practices for attribution and citation
 
 **Collect**
-<<<<<<< HEAD
-* Aggregate content using RSS/Atom feeds
-* Capture any web content with a bookmarklet
-* Import full text, image, video content, and post metadata
-* Batch add feeds using OPML files
-* Integrate tandardized content with [Readability](https://www.readability.com/)
-
-**Discuss**
-* Discuss content internally with private commenting
-* Count nominations from teams of contributors and editors
-* Expose item metadata, including the name of the source and method of nomination
-
-**Share**
-* Allow contributors to send items directly to their own Twitter account
-=======
 
 * Aggregate content using RSS/Atom feeds
 * Capture any web content with a bookmarklet
@@ -52,7 +37,6 @@ PressForward is a free plugin that provides an editorial workflow for content ag
 **Share**
 
 * Allow contributors to send items directly to their own Twitter account
->>>>>>> 918ff7209da7a990d3c76b4429ca469b341bb203
 * Attach full content, attribution link, canonical URL, and metadata to WordPress Posts as Draft
 * Republish any content type supported by your theme (text, image, quote, snippet, etc.)
 * Optional auto-redirect back to original source
@@ -100,13 +84,8 @@ A list of [FAQs](https://github.com/PressForward/pressforward/wiki/FAQ) can be f
 
 = 3.5 =
 * Now checks for known aggregation services to insure proper resolution of URLs.
-<<<<<<< HEAD
 * Created the Amplify dropdown button in the actions bar.
 * Added button to share to Twitter to the Amplify dropdown.
-=======
-* Created the Amplify dropdown button in the actions bar.
-* Added button to share to Twitter to the Amplify dropdown.
->>>>>>> 918ff7209da7a990d3c76b4429ca469b341bb203
 * Added button to Amplify to send from All Content directly to draft.
 * For clarity, changed Last Retrieved column title to Last Time Item Retrieved.
 * Added OG URL tag to forwarded pages.
@@ -116,16 +95,11 @@ A list of [FAQs](https://github.com/PressForward/pressforward/wiki/FAQ) can be f
 * Attach the navbar on scroll.
 * Moved Refresh button to Tools.
 * Better assure that the system retrieves open graph images and sets them as Featured Images.
-<<<<<<< HEAD
 * Allows feed URLs to be changed via Quick Edit.
-=======
-* Allows feed URLs to be changed via Quick Edit.
->>>>>>> 918ff7209da7a990d3c76b4429ca469b341bb203
 * Set up functions to better detect current page.
 * Set up a debug function for displaying current page.
 * If WordPress installs are greater than 4.0, all feeds not in folders will display under folders.
 * Set default sort for Feeds to alphabetical.
-<<<<<<< HEAD
 * Set up breadcrumb titling for All Content and Nominated.
 * Moved the source and byline to the head of the current article modal.
 * Added help button to menu.
@@ -153,35 +127,6 @@ A list of [FAQs](https://github.com/PressForward/pressforward/wiki/FAQ) can be f
 * Clarify what exactly dismissing alerts does. (It sets those feeds to Inactive.)
 * Better descriptions of most settings.
 * Fixed occasional content duplication on infinite scroll, when retrieval was active.
-=======
-* Set up breadcrumb titling for All Content and Nominated.
-* Moved the source and byline to the head of the current article modal.
-* Added help button to menu.
-* Allows users to decide if they want the right menu displayed and turn it off by default.
-* Allows users to set Grid or List and have the system remember it as a user preference.
-* Allows users to set infinite scroll or pagination and have the system remember it as a user preference.
-* Adds search to the nav menu on scroll-down.
-* New tabbed settings page, with user access to tabs based on user roles.
-* Allows administrators to control tab access with settings.
-* Allows users to always access their settings regardless of level.
-* Moved Nominate This to the Tools menu.
-* Added Nominate This as a source for the Feeds menu.
-* Added a Nominate This prompt for first-time users to the All Content menu.
-* Allows administrators to control the display of comments based on user level.
-* Open modal now counts as a hashed page state.
-* Pressing the browser back button while viewing an open modal will close the modal, not go to the previous page.
-* Compressed filtering options into a dropdown in the navbar.
-* Opening a modal to read an item will now only set the item to Read, it will never unset the Read property.
-* Added a column to the Feeds area to indicate last time the feed was retrieved.
-* Allows feeds to be sorted by the last time they were retrieved.
-* Fullscreen script patched to 1.2
-* Flipped infobox to display over the action bar.
-* No hidden items in modal navigation.
-* The Folders sidebar now scrolls separately from the main page and is always fully available.
-* Clarify what exactly dismissing alerts does. (It sets those feeds to Inactive.)
-* Better descriptions of most settings.
-* Fixed occasional content duplication on infinite scroll, when retrieval was active.
->>>>>>> 918ff7209da7a990d3c76b4429ca469b341bb203
 * Fixed a variety of user action responses so actions are clearer.
 
 = 3.4.6 =
@@ -189,19 +134,11 @@ A list of [FAQs](https://github.com/PressForward/pressforward/wiki/FAQ) can be f
 
 = 3.4.5 =
 * Nominate This now works much more optimally.
-<<<<<<< HEAD
 * Nominate This no longer creating crazy line breaks.
 * OpenGraph image detection now working properly.
 * Alert Box now more backwards compatible.
 * Turned off modules no longer show turned on menus.
 * Mark As Read now works properly.
-=======
-* Nominate This no longer creating crazy line breaks.
-* OpenGraph image detection now working properly.
-* Alert Box now more backwards compatible.
-* Turned off modules no longer show turned on menus.
-* Mark As Read now works properly.
->>>>>>> 918ff7209da7a990d3c76b4429ca469b341bb203
 
 = 3.4.4 =
 * Resolved CSS overlay design conflicts.
